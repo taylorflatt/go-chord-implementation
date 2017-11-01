@@ -90,6 +90,11 @@ func InitializeChord(size int) Netmap {
 		Size:  size,
 	}
 
+	for index, node := range chord.Nodes {
+		node.Id = index
+		chord.Nodes[index] = node
+	}
+
 	return chord
 }
 
@@ -104,7 +109,6 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 		fmt.Print("Active Node: ")
 		it, _ := r.ReadString('\n')
 		it = strings.TrimSpace(it)
-		fmt.Print(it)
 
 		if it == "done" {
 			break
@@ -151,9 +155,6 @@ func DetermineSuccessors(network Netmap) {
 				firstActive = node.Id
 				first = false
 			}
-
-			// The active node is its own successor, hence + 1.
-			lBound++
 		}
 
 		// When it reaches the end of the circular structure, there could be nodes
@@ -192,6 +193,71 @@ func CreateFingerTables(network Netmap, fingerTableSize int) {
 	}
 }
 
+func PrintNetwork(network Netmap) {
+
+	fmt.Println("Network Size: ", network.Size)
+
+	for _, node := range network.Nodes {
+		fmt.Println("Node: ", node.Id)
+		fmt.Println("--------------")
+		fmt.Println("Active: ", node.Active)
+		fmt.Println("Predecessor: ", node.Predecessor)
+		fmt.Println("Successor: ", node.Successor)
+		fmt.Println("--------------")
+		fmt.Println("FINGER TABLE")
+		fmt.Println("--------------")
+
+		for _, entry := range node.Table.Entries {
+			fmt.Print("Key = ", entry.Key)
+			fmt.Print(" , Value = ", entry.Successor)
+			fmt.Println()
+		}
+	}
+}
+
+func PrintNode(node Node) {
+
+	fmt.Println("Node: ", node.Id)
+	fmt.Println("--------------")
+	fmt.Println("Active: ", node.Active)
+	fmt.Println("Predecessor: ", node.Predecessor)
+	fmt.Println("Successor: ", node.Successor)
+	fmt.Println("--------------")
+	fmt.Println("FINGER TABLE")
+	fmt.Println("--------------")
+
+	for _, entry := range node.Table.Entries {
+		fmt.Print("Key = ", entry.Key)
+		fmt.Print(" , Value = ", entry.Successor)
+		fmt.Println()
+	}
+}
+
+func PrintActiveNodes(network Netmap) {
+
+	fmt.Println("Active Nodes:")
+	fmt.Println("--------------")
+	for _, node := range network.Nodes {
+		if node.Active == true {
+			fmt.Println("Node: ", node.Id)
+		}
+	}
+}
+
+func PrintNodeFingerTable(node Node) {
+
+	fmt.Println("Node: ", node.Id)
+	fmt.Println("FINGER TABLE")
+	fmt.Println("--------------")
+
+	for _, entry := range node.Table.Entries {
+		fmt.Print("Key = ", entry.Key)
+		fmt.Print(" , Value = ", entry.Successor)
+		fmt.Println()
+	}
+
+}
+
 func main() {
 
 	r := bufio.NewReader(os.Stdin)
@@ -211,27 +277,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not parse the size. Please enter an integer number.")
 	}
+	fmt.Print(fts)
 
 	chord := InitializeChord(s)
+	//PrintNetwork(chord)
 	CreateActiveNodes(chord, r)
+	//PrintActiveNodes(chord)
 	DetermineSuccessors(chord)
-	CreateFingerTables(chord, fts)
-
-	for _, node := range chord.Nodes {
-		fmt.Println("Node: ", node.Id)
-		fmt.Println("--------------")
-		fmt.Println("Active: ", node.Active)
-		fmt.Println("Predecessor: ", node.Predecessor)
-		fmt.Println("Successor: ", node.Successor)
-		fmt.Println("--------------")
-		fmt.Println("FINGER TABLE")
-		fmt.Println("--------------")
-
-		for _, entry := range node.Table.Entries {
-			fmt.Print("Key = ", entry.Key)
-			fmt.Print(" , Value = ", entry.Successor)
-			fmt.Println()
-		}
-	}
+	PrintNetwork(chord)
+	//CreateFingerTables(chord, fts)
 
 }
