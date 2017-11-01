@@ -11,29 +11,6 @@ import (
 	"strings"
 )
 
-type netmap struct {
-	nodes []node
-	size  int
-}
-
-type ftentry struct {
-	key int
-	s   int
-}
-
-type ft struct {
-	entries []ftentry
-	size    int
-}
-
-type node struct {
-	id  int
-	s   int
-	p   int
-	act bool
-	ft  ft
-}
-
 // ParseInt32 custom method.
 func ParseInt32(s string) (int, error) {
 
@@ -47,17 +24,6 @@ func ParseInt32(s string) (int, error) {
 	si := int(st)
 
 	return si, nil
-}
-
-func ComputeFTableSize(s int) (int, error) {
-
-	r := math.Log(float64(s)) / math.Log(2)
-
-	if !FloatIsDigit(r) {
-		return -1, errors.New("the entered number does not work with 2")
-	}
-
-	return int(r), nil
 }
 
 func FloatIsDigit(n float64) bool {
@@ -83,6 +49,68 @@ func Pow(x int, y int) int {
 	}
 }
 
+func ComputeFTableSize(s int) (int, error) {
+
+	r := math.Log(float64(s)) / math.Log(2)
+
+	if !FloatIsDigit(r) {
+		return -1, errors.New("the entered number does not work with 2")
+	}
+
+	return int(r), nil
+}
+
+func InitializeChord(size int) Netmap {
+
+	chord := Netmap{
+		Nodes: make([]Node, size),
+		Size:  size,
+	}
+
+	return chord
+}
+
+func CreateActiveNodes(network Netmap, r *Reader) {
+
+	fmt.Println()
+	fmt.Println("Enter an active node (type done to stop)")
+	fmt.Println("-----------------------------------")
+
+	// Set the active nodes for the network.
+	for true {
+		fmt.Print("Active Node: ")
+		it, _ := r.ReadString('\n')
+		it = strings.TrimSpace(it)
+		fmt.Print(it)
+
+		if it == "done" {
+			break
+		}
+
+		i, err := ParseInt32(it)
+
+		switch {
+		case err != nil:
+			fmt.Println("Could not parse the node number. Please enter an integer number.")
+		case i > network.Size-1:
+			fmt.Println("Please enter a node that is within the size of the network.")
+		default:
+			// Create the node and set it to active.
+			n := Node{
+				Id:     i,
+				Active: true,
+			}
+
+			// Add the node to the chord network.
+			network.Nodes[i] = n
+		}
+	}
+}
+
+func DetermineSuccessor() {
+
+}
+
 func main() {
 
 	r := bufio.NewReader(os.Stdin)
@@ -103,18 +131,7 @@ func main() {
 		log.Fatalf("Could not parse the size. Please enter an integer number.")
 	}
 
-	chord := netmap{
-		nodes: make([]node, s),
-		size:  s,
-	}
-
-	fmt.Println(Pow(2, 0))
-	fmt.Println(Pow(2, 1))
-	fmt.Println(Pow(2, 2))
-	fmt.Println(Pow(2, 3))
-	fmt.Println(Pow(2, 4))
-	fmt.Println(Pow(2, 5))
-	fmt.Println(Pow(2, 6))
+	chord := InitializeChord(s)
 
 	fmt.Println()
 	fmt.Println("Enter an active node (type done to stop)")
@@ -147,89 +164,99 @@ func main() {
 				predecessor = i - 1
 			}
 
-			ftb := ft{
-				entries: make([]ftentry, fts),
-				size:    fts,
+			ftb := FingerTable{
+				Entries: make([]FtEntry, fts),
+				Size:    fts,
 			}
 
 			// Create the active node's finger table.
 			for k := 0; k < fts; k++ {
 				key := (i + Pow(2, k)) % s
-				ftb.entries[k] = ftentry{
-					key: key,
-					s:   i,
+
+				ftb.Entries[k] = FtEntry{
+					Key:       key,
+					Successor: i,
 				}
 			}
 
 			// Create the node and set it to active.
-			n := node{
-				id:  i,
-				s:   successor,
-				p:   predecessor,
-				act: true,
-				ft:  ftb,
+			n := Node{
+				Id:          i,
+				Successor:   successor,
+				Predecessor: predecessor,
+				Active:      true,
+				Table:       ftb,
 			}
 
 			// Add the node to the chord network.
-			chord.nodes[i] = n
+			chord.Nodes[i] = n
 		}
 
 		//chord.nodes = append(chord.nodes, n)
 	}
 
 	// Initialize the other (non-active) nodes within the structure.
-	for index, node := range chord.nodes {
-		if node.act == false {
-			node.id = index
+	for index, node := range chord.Nodes {
+		if node.Active == false {
+			node.Id = index
 
 			for j := 0; j < s; j++ {
-				if chord.nodes[j].act == true {
-					node.s = j
+				if chord.Nodes[j].Active == true {
+					node.Successor = j
 					break
 				}
 			}
 
 			// Check for wrapping at the origin.
 			if index == 0 {
-				node.p = s - 1
+				node.Predecessor = s - 1
 			} else {
-				node.p = index - 1
+				node.Predecessor = index - 1
 			}
 
-			node.s = (index + 1) % s
+			node.Successor = (index + 1) % s
 
-			ftb := ft{
-				entries: make([]ftentry, fts),
-				size:    fts,
+			ftb := FingerTable{
+				Entries: make([]FtEntry, fts),
+				Size:    fts,
+			}
+
+			nextSuccessor := -1
+
+			for i, node := range chord.Nodes {
+				if i > index && node.Active == true {
+					nextSuccessor = i
+				}
+
 			}
 
 			for k := 0; k < fts; k++ {
 				key := (index + Pow(2, k)) % s
-				ftb.entries[k] = ftentry{
-					key: key,
-					s:   node.s,
+				ftb.Entries[k] = FtEntry{
+					Key:       key,
+					Successor: nextSuccessor,
 				}
 			}
 		}
 
-		chord.nodes[index] = node
+		chord.Nodes[index] = node
 	}
 
 	//fmt.Printf("%v", chord.nodes)
 
-	for _, node := range chord.nodes {
-		fmt.Println("Node: ", node.id)
+	for _, node := range chord.Nodes {
+		fmt.Println("Node: ", node.Id)
 		fmt.Println("--------------")
-		fmt.Println("Active: ", node.act)
-		fmt.Println("Predecessor: ", node.p)
-		fmt.Println("Successor: ", node.s)
+		fmt.Println("Active: ", node.Active)
+		fmt.Println("Predecessor: ", node.Predecessor)
+		fmt.Println("Successor: ", node.Successor)
 		fmt.Println("--------------")
 		fmt.Println("FINGER TABLE")
 		fmt.Println("--------------")
 
-		for _, entry := range node.ft.entries {
-			fmt.Print("Key = ", entry.key)
-			fmt.Print(" , Value = ", entry.s)
+		for _, entry := range node.Table.Entries {
+			fmt.Print("Key = ", entry.Key)
+			fmt.Print(" , Value = ", entry.Successor)
 			fmt.Println()
 		}
 	}
