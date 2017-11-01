@@ -152,6 +152,16 @@ func main() {
 				size:    fts,
 			}
 
+			// Create the active node's finger table.
+			for k := 0; k < fts; k++ {
+				key := (i + Pow(2, k)) % s
+				ftb.entries[k] = ftentry{
+					key: key,
+					s:   i,
+				}
+			}
+
+			// Create the node and set it to active.
 			n := node{
 				id:  i,
 				s:   successor,
@@ -160,13 +170,14 @@ func main() {
 				ft:  ftb,
 			}
 
+			// Add the node to the chord network.
 			chord.nodes[i] = n
 		}
 
 		//chord.nodes = append(chord.nodes, n)
 	}
 
-	// Initialize the other nodes within the structure.
+	// Initialize the other (non-active) nodes within the structure.
 	for index, node := range chord.nodes {
 		if node.act == false {
 			node.id = index
@@ -185,10 +196,42 @@ func main() {
 				node.p = index - 1
 			}
 
-			node.s = index + 1%s
+			node.s = (index + 1) % s
+
+			ftb := ft{
+				entries: make([]ftentry, fts),
+				size:    fts,
+			}
+
+			for k := 0; k < fts; k++ {
+				key := (index + Pow(2, k)) % s
+				ftb.entries[k] = ftentry{
+					key: key,
+					s:   node.s,
+				}
+			}
 		}
+
+		chord.nodes[index] = node
 	}
 
-	fmt.Printf("%v", chord.nodes)
+	//fmt.Printf("%v", chord.nodes)
+
+	for _, node := range chord.nodes {
+		fmt.Println("Node: ", node.id)
+		fmt.Println("--------------")
+		fmt.Println("Active: ", node.act)
+		fmt.Println("Predecessor: ", node.p)
+		fmt.Println("Successor: ", node.s)
+		fmt.Println("--------------")
+		fmt.Println("FINGER TABLE")
+		fmt.Println("--------------")
+
+		for _, entry := range node.ft.entries {
+			fmt.Print("Key = ", entry.key)
+			fmt.Print(" , Value = ", entry.s)
+			fmt.Println()
+		}
+	}
 
 }
