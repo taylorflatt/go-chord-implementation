@@ -64,9 +64,8 @@ func Pow(x int, y int) int {
 	case y == 1:
 		return x
 	default:
-		for y > 0 {
+		for i := 1; i < y; i++ {
 			res *= x
-			y--
 		}
 		return res
 	}
@@ -98,6 +97,55 @@ func InitializeChord(size int) Netmap {
 	return chord
 }
 
+func GenerateActiveNodes(network Netmap, r *bufio.Reader) {
+
+	fmt.Println()
+	fmt.Println("Enter the parameters for the PNG")
+	fmt.Println("-----------------------------------")
+
+	fmt.Print("Seed: ")
+	st, _ := r.ReadString('\n')
+	st = strings.TrimSpace(st)
+	seed, err := ParseInt32(st)
+
+	if err != nil {
+		fmt.Println("Could not parse the seed number. Please enter an integer number.")
+	}
+
+	fmt.Print("Increment: ")
+	it, _ := r.ReadString('\n')
+	st = strings.TrimSpace(it)
+	increment, err := ParseInt32(it)
+
+	fmt.Print("Multiplier: ")
+	mt, _ := r.ReadString('\n')
+	st = strings.TrimSpace(mt)
+	multiplier, err := ParseInt32(mt)
+
+	// Set the first node as active.
+	i := ((multiplier * seed) + increment) % network.Size
+	network.Nodes[i].Active = true
+
+	for true {
+
+		// Pseudo-random number generator.
+		i = ((multiplier * i) + increment) % network.Size
+
+		fmt.Println("RandNum: ", i)
+
+		PrintNode(network.Nodes[i])
+
+		// We have begun repeating, thus we have generated all active nodes.
+		if network.Nodes[i].Active == true {
+			fmt.Println("FOUND LOOP POINT, BREAKING")
+			break
+		}
+
+		network.Nodes[i].Active = true
+	}
+
+}
+
 func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 
 	fmt.Println()
@@ -124,7 +172,6 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 		default:
 			// Create the node and set it to active.
 			n := Node{
-				Id:     i,
 				Active: true,
 			}
 
@@ -179,7 +226,7 @@ func CreateFingerTables(network Netmap, fingerTableSize int) {
 
 		// Generate an entry into the node's finger table.
 		for i := 0; i < fingerTableSize; i++ {
-			key := k + Pow(2, i)
+			key := (k + Pow(2, i)) % network.Size
 			successor := network.Nodes[key].Successor
 
 			table.Entries[i] = FtEntry{
@@ -190,6 +237,7 @@ func CreateFingerTables(network Netmap, fingerTableSize int) {
 
 		// Set the node's completed finger table.
 		node.Table = table
+		network.Nodes[k] = node
 	}
 }
 
@@ -255,7 +303,6 @@ func PrintNodeFingerTable(node Node) {
 		fmt.Print(" , Value = ", entry.Successor)
 		fmt.Println()
 	}
-
 }
 
 func main() {
@@ -272,19 +319,18 @@ func main() {
 		fmt.Println("The size of the network must be some exponential of 2 (e.g. 2^5 = 32).")
 	}
 
-	//fmt.Print(fts)
-
 	if err != nil {
 		log.Fatalf("Could not parse the size. Please enter an integer number.")
 	}
-	fmt.Print(fts)
 
 	chord := InitializeChord(s)
 	//PrintNetwork(chord)
-	CreateActiveNodes(chord, r)
-	//PrintActiveNodes(chord)
+	//CreateActiveNodes(chord, r)
+	GenerateActiveNodes(chord, r)
+	PrintActiveNodes(chord)
 	DetermineSuccessors(chord)
-	PrintNetwork(chord)
-	//CreateFingerTables(chord, fts)
+	//PrintNetwork(chord)
+	CreateFingerTables(chord, fts)
+	//PrintNetwork(chord)
 
 }
