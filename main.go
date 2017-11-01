@@ -11,6 +11,29 @@ import (
 	"strings"
 )
 
+type Netmap struct {
+	Nodes []Node
+	Size  int
+}
+
+type FtEntry struct {
+	Key       int
+	Successor int
+}
+
+type FingerTable struct {
+	Entries []FtEntry
+	Size    int
+}
+
+type Node struct {
+	Id          int
+	Successor   int
+	Predecessor int
+	Active      bool
+	Table       FingerTable
+}
+
 // ParseInt32 custom method.
 func ParseInt32(s string) (int, error) {
 
@@ -70,7 +93,7 @@ func InitializeChord(size int) Netmap {
 	return chord
 }
 
-func CreateActiveNodes(network Netmap, r *Reader) {
+func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 
 	fmt.Println()
 	fmt.Println("Enter an active node (type done to stop)")
@@ -107,8 +130,66 @@ func CreateActiveNodes(network Netmap, r *Reader) {
 	}
 }
 
-func DetermineSuccessor() {
+func DetermineSuccessors(network Netmap) {
 
+	lBound := 0
+	first := false
+	firstActive := 0
+
+	for index, node := range network.Nodes {
+
+		if node.Active == true {
+			// Set the successor for all the nodes between two active nodes to be
+			// the current node as the successor.
+			for lBound <= index {
+				network.Nodes[lBound].Successor = node.Id
+				lBound++
+			}
+
+			// Store the first active node for later use.
+			if first {
+				firstActive = node.Id
+				first = false
+			}
+
+			// The active node is its own successor, hence + 1.
+			lBound++
+		}
+
+		// When it reaches the end of the circular structure, there could be nodes
+		// which haven't been assigned a successor. So, they should be assigned to
+		// the first active node found since they are immediately before it logically.
+		if index == network.Size-1 {
+			for lBound <= index {
+				network.Nodes[lBound].Successor = firstActive
+				lBound++
+			}
+		}
+	}
+}
+
+func CreateFingerTables(network Netmap, fingerTableSize int) {
+
+	for k, node := range network.Nodes {
+		table := FingerTable{
+			Entries: make([]FtEntry, fingerTableSize),
+			Size:    fingerTableSize,
+		}
+
+		// Generate an entry into the node's finger table.
+		for i := 0; i < fingerTableSize; i++ {
+			key := k + Pow(2, i)
+			successor := network.Nodes[key].Successor
+
+			table.Entries[i] = FtEntry{
+				Key:       key,
+				Successor: successor,
+			}
+		}
+
+		// Set the node's completed finger table.
+		node.Table = table
+	}
 }
 
 func main() {
@@ -132,117 +213,9 @@ func main() {
 	}
 
 	chord := InitializeChord(s)
-
-	fmt.Println()
-	fmt.Println("Enter an active node (type done to stop)")
-	fmt.Println("-----------------------------------")
-
-	for true {
-		fmt.Print("Active Node: ")
-		it, _ := r.ReadString('\n')
-		it = strings.TrimSpace(it)
-		fmt.Print(it)
-
-		if it == "done" {
-			break
-		}
-
-		i, err := ParseInt32(it)
-
-		switch {
-		case err != nil:
-			fmt.Println("Could not parse the node number. Please enter an integer number.")
-		case i > s-1:
-			fmt.Println("Please enter a node that is within the size of the network.")
-		default:
-			successor := (i + 1) % s
-			predecessor := -1
-
-			if i == 0 {
-				predecessor = s - 1
-			} else {
-				predecessor = i - 1
-			}
-
-			ftb := FingerTable{
-				Entries: make([]FtEntry, fts),
-				Size:    fts,
-			}
-
-			// Create the active node's finger table.
-			for k := 0; k < fts; k++ {
-				key := (i + Pow(2, k)) % s
-
-				ftb.Entries[k] = FtEntry{
-					Key:       key,
-					Successor: i,
-				}
-			}
-
-			// Create the node and set it to active.
-			n := Node{
-				Id:          i,
-				Successor:   successor,
-				Predecessor: predecessor,
-				Active:      true,
-				Table:       ftb,
-			}
-
-			// Add the node to the chord network.
-			chord.Nodes[i] = n
-		}
-
-		//chord.nodes = append(chord.nodes, n)
-	}
-
-	// Initialize the other (non-active) nodes within the structure.
-	for index, node := range chord.Nodes {
-		if node.Active == false {
-			node.Id = index
-
-			for j := 0; j < s; j++ {
-				if chord.Nodes[j].Active == true {
-					node.Successor = j
-					break
-				}
-			}
-
-			// Check for wrapping at the origin.
-			if index == 0 {
-				node.Predecessor = s - 1
-			} else {
-				node.Predecessor = index - 1
-			}
-
-			node.Successor = (index + 1) % s
-
-			ftb := FingerTable{
-				Entries: make([]FtEntry, fts),
-				Size:    fts,
-			}
-
-			nextSuccessor := -1
-
-			for i, node := range chord.Nodes {
-				if i > index && node.Active == true {
-					nextSuccessor = i
-				}
-
-			}
-
-			for k := 0; k < fts; k++ {
-				key := (index + Pow(2, k)) % s
-				ftb.Entries[k] = FtEntry{
-					Key:       key,
-					Successor: nextSuccessor,
-				}
-			}
-		}
-
-		chord.Nodes[index] = node
-	}
-
-	//fmt.Printf("%v", chord.nodes)
+	CreateActiveNodes(chord, r)
+	DetermineSuccessors(chord)
+	CreateFingerTables(chord, fts)
 
 	for _, node := range chord.Nodes {
 		fmt.Println("Node: ", node.Id)
