@@ -27,11 +27,10 @@ type FingerTable struct {
 }
 
 type Node struct {
-	Id          int
-	Successor   int
-	Predecessor int
-	Active      bool
-	Table       FingerTable
+	Id        int
+	Successor int
+	Active    bool
+	Table     FingerTable
 }
 
 // ParseInt32 custom method.
@@ -241,6 +240,13 @@ func CreateFingerTables(network Netmap, fingerTableSize int) {
 	}
 }
 
+func FindNodeDataLocation(network Netmap, node int) {
+
+	for index, node := range Netmap.Nodes {
+
+	}
+}
+
 func PrintNetwork(network Netmap) {
 
 	fmt.Println("Network Size: ", network.Size)
@@ -249,7 +255,6 @@ func PrintNetwork(network Netmap) {
 		fmt.Println("Node: ", node.Id)
 		fmt.Println("--------------")
 		fmt.Println("Active: ", node.Active)
-		fmt.Println("Predecessor: ", node.Predecessor)
 		fmt.Println("Successor: ", node.Successor)
 		fmt.Println("--------------")
 		fmt.Println("FINGER TABLE")
@@ -268,7 +273,6 @@ func PrintNode(node Node) {
 	fmt.Println("Node: ", node.Id)
 	fmt.Println("--------------")
 	fmt.Println("Active: ", node.Active)
-	fmt.Println("Predecessor: ", node.Predecessor)
 	fmt.Println("Successor: ", node.Successor)
 	fmt.Println("--------------")
 	fmt.Println("FINGER TABLE")
