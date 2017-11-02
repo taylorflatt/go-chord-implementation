@@ -37,12 +37,14 @@ type Node struct {
 
 func main() {
 
+	// Set flags for node creation and output verbosity.
 	ml := flag.Bool("manual", false, "Manually enter the active nodes for the network.")
 	ms := flag.Bool("m", false, "Manually enter the active nodes for the network.")
 	vl := flag.Bool("verbose", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
 	vs := flag.Bool("v", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
 	flag.Parse()
 
+	// Initialize the flags.
 	man := false
 	if *ml {
 		man = *ml
@@ -101,17 +103,21 @@ func main() {
 	FindSuccessor(&chord, chord.AnchorId, 16)
 }
 
+// ComputeFTableSize determines the sizes of finger tables based on the size of the network.
+// It returns the finger table size and an error if the network size cannot be expressed as s = 2^x.
 func ComputeFTableSize(s int) (int, error) {
 
 	r := math.Log(float64(s)) / math.Log(2)
 
 	if !FloatIsDigit(r) {
-		return -1, errors.New("the entered number does not work with 2")
+		return -1, errors.New("the entered number does not conform to n = 2^x")
 	}
 
 	return int(r), nil
 }
 
+// InitializeChord creates the network and sets the ids of all the nodes.
+// It returns a network without active nodes of size n.
 func InitializeChord(size int) Netmap {
 
 	chord := Netmap{
@@ -127,10 +133,13 @@ func InitializeChord(size int) Netmap {
 	return chord
 }
 
+// GenerateActiveNodes will generate the active nodes for the network based on a PRNG
+// X_(n+1) = (aX_n + c)mod(m).
+// It doesn't return anything.
 func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 
 	fmt.Println()
-	fmt.Println("Enter the parameters for the PNG")
+	fmt.Println("Enter the parameters for the PRNG")
 	fmt.Println("-----------------------------------")
 
 	fmt.Print("Seed: ")
@@ -186,6 +195,9 @@ func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 	}
 }
 
+// CreateActiveNodes prompts the user for manual entry of the active nodes in the network
+// bounded by 0 <= aNode <= networkSize - 1.
+// It doesn't return anything.
 func CreateActiveNodes(network *Netmap, r *bufio.Reader) {
 
 	fmt.Println()
@@ -226,6 +238,9 @@ func CreateActiveNodes(network *Netmap, r *bufio.Reader) {
 	network.AnchorId = min
 }
 
+// DetermineSuccessors computes the successor for each node in the network which forms the
+// logical path between each node (creating a circle).
+// It doesn't return anything.
 func DetermineSuccessors(network *Netmap) {
 
 	lBound := 0
@@ -253,6 +268,8 @@ func DetermineSuccessors(network *Netmap) {
 	}
 }
 
+// CreateFingerTables creates the finger tables for the network given an appropriate size.
+// It doesn't return anything.
 func CreateFingerTables(network *Netmap, fingerTableSize int) {
 
 	for k, _ := range network.Nodes {
@@ -277,6 +294,9 @@ func CreateFingerTables(network *Netmap, fingerTableSize int) {
 	}
 }
 
+// FindSuccessor is the lookup algorithm for a particular node to determine which active node
+// contains the node's data/information.
+// It returns the ID of the node which contains the node's data (it's successor).
 func FindSuccessor(network *Netmap, node int, find int) int {
 
 	fmt.Println("Entering node ", node)
@@ -311,7 +331,8 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	return FindSuccessor(network, min, find)
 }
 
-// ParseInt32 custom method.
+// ParseInt32 takes a string, trims the space, and parses it into an int.
+// It returns the parsed int or an error due to a failure in parsing.
 func ParseInt32(s string) (int, error) {
 
 	s = strings.TrimSpace(s)
@@ -326,11 +347,15 @@ func ParseInt32(s string) (int, error) {
 	return si, nil
 }
 
+// FloatIsDigit determines if a given float is a whole number.
+// It returns true if it is a whole number, otherwise false.
 func FloatIsDigit(n float64) bool {
 
 	return n == float64(int(n))
 }
 
+// Pow computes x^y for ints.
+// It returns an int value of the exponentiation.
 func Pow(x int, y int) int {
 
 	res := x
@@ -348,6 +373,8 @@ func Pow(x int, y int) int {
 	}
 }
 
+// PrintNetwork displays the network information and all of the node information.
+// It doesn't return anything.
 func PrintNetwork(network Netmap) {
 
 	fmt.Println("Network Size: ", network.Size)
@@ -370,6 +397,8 @@ func PrintNetwork(network Netmap) {
 	}
 }
 
+// PrintNode displays a particular node's information.
+// It doesn't return anything.
 func PrintNode(node Node) {
 
 	fmt.Println("Node: ", node.Id)
@@ -387,6 +416,9 @@ func PrintNode(node Node) {
 	}
 }
 
+// PrintActiveNodes displays a newline separated list of all the active nodes
+// for a network.
+// It doesn't return anything.
 func PrintActiveNodes(network Netmap) {
 
 	fmt.Println("Active Nodes:")
@@ -398,6 +430,8 @@ func PrintActiveNodes(network Netmap) {
 	}
 }
 
+// PrintNodeFingerTable displays only a particular node's finger table.
+// It doesn't return anything.
 func PrintNodeFingerTable(node Node) {
 
 	fmt.Println("-------------------")
