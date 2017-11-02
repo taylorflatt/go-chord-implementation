@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -271,6 +272,12 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 		}
 	}
 
+	// If the successor in the node's table is itself, then it is the value's successor.
+	if min == node {
+		fmt.Println("  > By definition, we know node ", node, " must be who we are looking for.")
+		return node
+	}
+
 	fmt.Println()
 	return FindSuccessor(network, min, find)
 }
@@ -339,6 +346,28 @@ func PrintNodeFingerTable(node Node) {
 
 func main() {
 
+	ml := flag.Bool("manual", false, "Manually enter the active nodes for the network.")
+	ms := flag.Bool("m", false, "Manually enter the active nodes for the network.")
+	vl := flag.Bool("verbose", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
+	vs := flag.Bool("v", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
+	flag.Parse()
+
+	man := false
+	if *ml {
+		man = *ml
+	}
+	if *ms {
+		man = *ms
+	}
+
+	verb := false
+	if *vl {
+		verb = *vl
+	}
+	if *vs {
+		verb = *vs
+	}
+
 	r := bufio.NewReader(os.Stdin)
 
 	fmt.Print("Please enter the size of the CHORD network: ")
@@ -356,15 +385,27 @@ func main() {
 	}
 
 	chord := InitializeChord(s)
-	//PrintNetwork(chord)
-	//CreateActiveNodes(&chord, r)
-	GenerateActiveNodes(&chord, r)
-	//PrintActiveNodes(chord)
+	if verb {
+		PrintNetwork(chord)
+	}
+	if man {
+		CreateActiveNodes(&chord, r)
+	} else {
+		GenerateActiveNodes(&chord, r)
+	}
+	if verb {
+		PrintActiveNodes(chord)
+		PrintNetwork(chord)
+	}
 	DetermineSuccessors(&chord)
-	//PrintNetwork(chord)
+	if verb {
+		PrintNetwork(chord)
+	}
 	CreateFingerTables(&chord, fts)
-	//PrintNetwork(chord)
 
-	fmt.Println(FindSuccessor(&chord, chord.AnchorId, 16))
+	if verb {
+		PrintNetwork(chord)
+	}
 
+	FindSuccessor(&chord, chord.AnchorId, 16)
 }
