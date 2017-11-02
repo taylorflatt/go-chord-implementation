@@ -35,41 +35,70 @@ type Node struct {
 	Table     FingerTable
 }
 
-// ParseInt32 custom method.
-func ParseInt32(s string) (int, error) {
+func main() {
 
-	s = strings.TrimSpace(s)
-	st, err := strconv.ParseInt(s, 10, 64)
+	ml := flag.Bool("manual", false, "Manually enter the active nodes for the network.")
+	ms := flag.Bool("m", false, "Manually enter the active nodes for the network.")
+	vl := flag.Bool("verbose", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
+	vs := flag.Bool("v", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
+	flag.Parse()
+
+	man := false
+	if *ml {
+		man = *ml
+	}
+	if *ms {
+		man = *ms
+	}
+
+	verb := false
+	if *vl {
+		verb = *vl
+	}
+	if *vs {
+		verb = *vs
+	}
+
+	r := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Please enter the size of the CHORD network: ")
+	st, _ := r.ReadString('\n')
+	st = strings.TrimSpace(st)
+	s, err := ParseInt32(st)
+	fts, err := ComputeFTableSize(s)
 
 	if err != nil {
-		return -1, err
+		fmt.Println("The size of the network must be some exponential of 2 (e.g. 2^5 = 32).")
 	}
 
-	si := int(st)
-
-	return si, nil
-}
-
-func FloatIsDigit(n float64) bool {
-
-	return n == float64(int(n))
-}
-
-func Pow(x int, y int) int {
-
-	res := x
-
-	switch {
-	case y == 0:
-		return 1
-	case y == 1:
-		return x
-	default:
-		for i := 1; i < y; i++ {
-			res *= x
-		}
-		return res
+	if err != nil {
+		log.Fatalf("Could not parse the size. Please enter an integer number.")
 	}
+
+	chord := InitializeChord(s)
+	if verb {
+		PrintNetwork(chord)
+	}
+	if man {
+		CreateActiveNodes(&chord, r)
+	} else {
+		GenerateActiveNodes(&chord, r)
+	}
+	if verb {
+		PrintActiveNodes(chord)
+		PrintNetwork(chord)
+	}
+	DetermineSuccessors(&chord)
+	if verb {
+		PrintNetwork(chord)
+	}
+	CreateFingerTables(&chord, fts)
+
+	if verb {
+		PrintNetwork(chord)
+	}
+
+	FindSuccessor(&chord, chord.AnchorId, 16)
 }
 
 func ComputeFTableSize(s int) (int, error) {
@@ -282,6 +311,43 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	return FindSuccessor(network, min, find)
 }
 
+// ParseInt32 custom method.
+func ParseInt32(s string) (int, error) {
+
+	s = strings.TrimSpace(s)
+	st, err := strconv.ParseInt(s, 10, 64)
+
+	if err != nil {
+		return -1, err
+	}
+
+	si := int(st)
+
+	return si, nil
+}
+
+func FloatIsDigit(n float64) bool {
+
+	return n == float64(int(n))
+}
+
+func Pow(x int, y int) int {
+
+	res := x
+
+	switch {
+	case y == 0:
+		return 1
+	case y == 1:
+		return x
+	default:
+		for i := 1; i < y; i++ {
+			res *= x
+		}
+		return res
+	}
+}
+
 func PrintNetwork(network Netmap) {
 
 	fmt.Println("Network Size: ", network.Size)
@@ -342,70 +408,4 @@ func PrintNodeFingerTable(node Node) {
 		fmt.Println()
 	}
 	fmt.Println("-------------------")
-}
-
-func main() {
-
-	ml := flag.Bool("manual", false, "Manually enter the active nodes for the network.")
-	ms := flag.Bool("m", false, "Manually enter the active nodes for the network.")
-	vl := flag.Bool("verbose", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
-	vs := flag.Bool("v", false, "Prints the state of the program after each step. Warning: This will add considerable clutter.")
-	flag.Parse()
-
-	man := false
-	if *ml {
-		man = *ml
-	}
-	if *ms {
-		man = *ms
-	}
-
-	verb := false
-	if *vl {
-		verb = *vl
-	}
-	if *vs {
-		verb = *vs
-	}
-
-	r := bufio.NewReader(os.Stdin)
-
-	fmt.Print("Please enter the size of the CHORD network: ")
-	st, _ := r.ReadString('\n')
-	st = strings.TrimSpace(st)
-	s, err := ParseInt32(st)
-	fts, err := ComputeFTableSize(s)
-
-	if err != nil {
-		fmt.Println("The size of the network must be some exponential of 2 (e.g. 2^5 = 32).")
-	}
-
-	if err != nil {
-		log.Fatalf("Could not parse the size. Please enter an integer number.")
-	}
-
-	chord := InitializeChord(s)
-	if verb {
-		PrintNetwork(chord)
-	}
-	if man {
-		CreateActiveNodes(&chord, r)
-	} else {
-		GenerateActiveNodes(&chord, r)
-	}
-	if verb {
-		PrintActiveNodes(chord)
-		PrintNetwork(chord)
-	}
-	DetermineSuccessors(&chord)
-	if verb {
-		PrintNetwork(chord)
-	}
-	CreateFingerTables(&chord, fts)
-
-	if verb {
-		PrintNetwork(chord)
-	}
-
-	FindSuccessor(&chord, chord.AnchorId, 16)
 }
