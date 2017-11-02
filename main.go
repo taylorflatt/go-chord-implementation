@@ -108,8 +108,8 @@ func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 	st = strings.TrimSpace(st)
 	seed, err := ParseInt32(st)
 
-	if err != nil {
-		fmt.Println("Could not parse the seed number. Please enter an integer number.")
+	if err != nil || seed < 0 {
+		fmt.Println("Invalid seed number. Please enter a positive integer number.")
 	}
 
 	fmt.Print("Increment: ")
@@ -117,10 +117,18 @@ func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 	st = strings.TrimSpace(it)
 	increment, err := ParseInt32(it)
 
+	if err != nil || increment < 0 {
+		fmt.Println("Invalid increment number. Please enter a positive integer number.")
+	}
+
 	fmt.Print("Multiplier: ")
 	mt, _ := r.ReadString('\n')
 	st = strings.TrimSpace(mt)
 	multiplier, err := ParseInt32(mt)
+
+	if err != nil || multiplier < 0 {
+		fmt.Println("Invalid multiplier number. Please enter a positive integer number.")
+	}
 
 	min := network.Size
 
@@ -170,12 +178,15 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 		switch {
 		case err != nil:
 			fmt.Println("Could not parse the node number. Please enter an integer number.")
+		case i < 0:
+			fmt.Println("Please enter a positive integer number.")
 		case i > network.Size-1:
 			fmt.Println("Please enter a node that is within the size of the network.")
 		default:
 			if i < min {
 				min = i
 			}
+
 			// Create the node and set it to active.
 			n := Node{
 				Active: true,
@@ -193,8 +204,6 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 func DetermineSuccessors(network Netmap) {
 
 	lBound := 0
-	//first := false
-	//firstActive := 0
 
 	for index, node := range network.Nodes {
 
@@ -205,12 +214,6 @@ func DetermineSuccessors(network Netmap) {
 				network.Nodes[lBound].Successor = node.Id
 				lBound++
 			}
-
-			// Store the first active node for later use.
-			//if first {
-			//	firstActive = node.Id
-			//	first = false
-			//}
 		}
 
 		// When it reaches the end of the circular structure, there could be nodes
