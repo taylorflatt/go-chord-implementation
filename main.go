@@ -12,24 +12,29 @@ import (
 	"strings"
 )
 
+// Netmap is the chord network structure consisting of a smallest-node (anchor node)
+// and all the nodes in the network.
 type Netmap struct {
-	AnchorId int
+	AnchorID int
 	Nodes    []Node
 	Size     int
 }
 
+// FtEntry is a single entry into a finger table.
 type FtEntry struct {
 	Key       int
 	Successor int
 }
 
+// FingerTable is a table consisting of n finger table entries for a single node.
 type FingerTable struct {
 	Entries []FtEntry
 	Size    int
 }
 
+// Node is a particular node on the network.
 type Node struct {
-	Id        int
+	ID        int
 	Successor int
 	Active    bool
 	Table     FingerTable
@@ -100,7 +105,7 @@ func main() {
 		PrintNetwork(chord)
 	}
 
-	FindSuccessor(&chord, chord.AnchorId, 16)
+	FindSuccessor(&chord, chord.AnchorID, 16)
 }
 
 // ComputeFTableSize determines the sizes of finger tables based on the size of the network.
@@ -126,7 +131,7 @@ func InitializeChord(size int) Netmap {
 	}
 
 	for index, node := range chord.Nodes {
-		node.Id = index
+		node.ID = index
 		chord.Nodes[index] = node
 	}
 
@@ -187,7 +192,7 @@ func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 		// We have begun repeating, thus we have generated all active nodes.
 		if network.Nodes[i].Active == true {
 			// Set the first active node (where queries first enter).
-			network.AnchorId = min
+			network.AnchorID = min
 			break
 		}
 
@@ -235,7 +240,7 @@ func CreateActiveNodes(network *Netmap, r *bufio.Reader) {
 	}
 
 	// Set the first active node (where queries first enter).
-	network.AnchorId = min
+	network.AnchorID = min
 }
 
 // DetermineSuccessors computes the successor for each node in the network which forms the
@@ -251,7 +256,7 @@ func DetermineSuccessors(network *Netmap) {
 			// Set the successor for all the nodes between two active nodes to be
 			// the current node as the successor.
 			for lBound <= index {
-				network.Nodes[lBound].Successor = node.Id
+				network.Nodes[lBound].Successor = node.ID
 				lBound++
 			}
 		}
@@ -261,7 +266,7 @@ func DetermineSuccessors(network *Netmap) {
 		// the first active node found since they are immediately before it logically.
 		if index == network.Size-1 {
 			for lBound <= index {
-				network.Nodes[lBound].Successor = network.AnchorId
+				network.Nodes[lBound].Successor = network.AnchorID
 				lBound++
 			}
 		}
@@ -378,10 +383,10 @@ func Pow(x int, y int) int {
 func PrintNetwork(network Netmap) {
 
 	fmt.Println("Network Size: ", network.Size)
-	fmt.Println("Network Anchor: ", network.AnchorId)
+	fmt.Println("Network Anchor: ", network.AnchorID)
 
 	for _, node := range network.Nodes {
-		fmt.Println("Node: ", node.Id)
+		fmt.Println("Node: ", node.ID)
 		fmt.Println("--------------")
 		fmt.Println("Active: ", node.Active)
 		fmt.Println("Successor: ", node.Successor)
@@ -401,7 +406,7 @@ func PrintNetwork(network Netmap) {
 // It doesn't return anything.
 func PrintNode(node Node) {
 
-	fmt.Println("Node: ", node.Id)
+	fmt.Println("Node: ", node.ID)
 	fmt.Println("-------------------")
 	fmt.Println("Active: ", node.Active)
 	fmt.Println("Successor: ", node.Successor)
@@ -425,7 +430,7 @@ func PrintActiveNodes(network Netmap) {
 	fmt.Println("-------------------")
 	for _, node := range network.Nodes {
 		if node.Active == true {
-			fmt.Println("Node: ", node.Id)
+			fmt.Println("Node: ", node.ID)
 		}
 	}
 }
