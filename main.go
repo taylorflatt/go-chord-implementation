@@ -257,7 +257,7 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 		switch {
 		// We know this by definition of the algorithm.
 		case find < node:
-			fmt.Println("  > By definition, we know node ", node, " must who we are looking for.")
+			fmt.Println("  > By definition, we know node ", node, " must be who we are looking for.")
 			return node
 		case entries.Key < find:
 			fmt.Println("  > key ", entries.Key, " is less than our value ", find)
@@ -357,8 +357,8 @@ func main() {
 
 	chord := InitializeChord(s)
 	//PrintNetwork(chord)
-	CreateActiveNodes(&chord, r)
-	//GenerateActiveNodes(&chord, r)
+	//CreateActiveNodes(&chord, r)
+	GenerateActiveNodes(&chord, r)
 	//PrintActiveNodes(chord)
 	DetermineSuccessors(&chord)
 	//PrintNetwork(chord)
