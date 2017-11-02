@@ -15,9 +15,8 @@ import (
 // Netmap is the chord network structure consisting of a smallest-node (anchor node)
 // and all the nodes in the network.
 type Netmap struct {
-	AnchorID int
-	Nodes    []Node
-	Size     int
+	Nodes []Node
+	Size  int
 }
 
 // FtEntry is a single entry into a finger table.
@@ -105,7 +104,14 @@ func main() {
 		PrintNetwork(chord)
 	}
 
-	FindSuccessor(&chord, chord.AnchorID, 16)
+	fmt.Println()
+	fmt.Println("Enter a node from where to search from: ")
+	at, _ := r.ReadString('\n')
+	at = strings.TrimSpace(at)
+	anchor, err := ParseInt32(at)
+
+	FindSuccessor(&chord, anchor, 14)
+
 }
 
 // ComputeFTableSize determines the sizes of finger tables based on the size of the network.
@@ -174,25 +180,17 @@ func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 		fmt.Println("Invalid multiplier number. Please enter a positive integer number.")
 	}
 
-	min := network.Size
-
 	// Set the first node as active.
 	i := ((multiplier * seed) + increment) % network.Size
 	network.Nodes[i].Active = true
 
 	for true {
 
-		if i < min {
-			min = i
-		}
-
 		// Pseudo-random number generator.
 		i = ((multiplier * i) + increment) % network.Size
 
 		// We have begun repeating, thus we have generated all active nodes.
 		if network.Nodes[i].Active == true {
-			// Set the first active node (where queries first enter).
-			network.AnchorID = min
 			break
 		}
 
@@ -238,9 +236,6 @@ func CreateActiveNodes(network *Netmap, r *bufio.Reader) {
 			network.Nodes[i].Active = true
 		}
 	}
-
-	// Set the first active node (where queries first enter).
-	network.AnchorID = min
 }
 
 // DetermineSuccessors computes the successor for each node in the network which forms the
@@ -249,10 +244,14 @@ func CreateActiveNodes(network *Netmap, r *bufio.Reader) {
 func DetermineSuccessors(network *Netmap) {
 
 	lBound := 0
+	first := -1
 
 	for index, node := range network.Nodes {
 
 		if node.Active == true {
+			if first == -1 {
+				first = node.ID
+			}
 			// Set the successor for all the nodes between two active nodes to be
 			// the current node as the successor.
 			for lBound <= index {
@@ -266,7 +265,7 @@ func DetermineSuccessors(network *Netmap) {
 		// the first active node found since they are immediately before it logically.
 		if index == network.Size-1 {
 			for lBound <= index {
-				network.Nodes[lBound].Successor = network.AnchorID
+				network.Nodes[lBound].Successor = first
 				lBound++
 			}
 		}
@@ -307,31 +306,39 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	fmt.Println("Entering node ", node)
 	PrintNodeFingerTable(network.Nodes[node])
 
+	nextActive := 0
 	min := network.Size
-	for _, entries := range network.Nodes[node].Table.Entries {
+	for index, entry := range network.Nodes[node].Table.Entries {
+
 		switch {
-		// We know this by definition of the algorithm.
-		case find < node:
-			fmt.Println("  > By definition, we know node ", node, " must be who we are looking for.")
-			return node
-		case entries.Key < find:
-			fmt.Println("  > key ", entries.Key, " is less than our value ", find)
-			min = entries.Successor
-		case entries.Key == find:
-			fmt.Println("  > Found ", find, " with node ", entries.Successor, " as it's successor!")
-			return entries.Successor
-		case entries.Key > find:
-			fmt.Println("  > Node ", min, " is the closest preceeding node. Moving to node ", min)
+		case index == 0:
+			nextActive = entry.Successor
+		case nextActive > find && node < find:
+			fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
+			return entry.Successor
+		case entry.Key < find:
+			min = entry.Successor
+		default:
 			break
 		}
+
+		// Store the next active node.
+		if index == 0 {
+			nextActive = entry.Successor
+		}
+
+		// We know that the node must lie between us and the next active node.
+		//if nextActive > find && node < find {
+		//	fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
+		//	return entry.Successor
+		//}
+		//
+		//if entry.Key < find {
+		//	min = entry.Successor
+		//}
 	}
 
-	// If the successor in the node's table is itself, then it is the value's successor.
-	if min == node {
-		fmt.Println("  > By definition, we know node ", node, " must be who we are looking for.")
-		return node
-	}
-
+	fmt.Println("  > Node ", min, " is the closest preceeding node. Moving to node ", min)
 	fmt.Println()
 	return FindSuccessor(network, min, find)
 }
@@ -383,7 +390,6 @@ func Pow(x int, y int) int {
 func PrintNetwork(network Netmap) {
 
 	fmt.Println("Network Size: ", network.Size)
-	fmt.Println("Network Anchor: ", network.AnchorID)
 
 	for _, node := range network.Nodes {
 		fmt.Println("Node: ", node.ID)
