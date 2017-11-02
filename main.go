@@ -156,7 +156,7 @@ func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 	}
 }
 
-func CreateActiveNodes(network Netmap, r *bufio.Reader) {
+func CreateActiveNodes(network *Netmap, r *bufio.Reader) {
 
 	fmt.Println()
 	fmt.Println("Enter an active node (type done to stop)")
@@ -187,13 +187,8 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 				min = i
 			}
 
-			// Create the node and set it to active.
-			n := Node{
-				Active: true,
-			}
-
-			// Add the node to the chord network.
-			network.Nodes[i] = n
+			// Set the node to active.
+			network.Nodes[i].Active = true
 		}
 	}
 
@@ -201,7 +196,7 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 	network.AnchorId = min
 }
 
-func DetermineSuccessors(network Netmap) {
+func DetermineSuccessors(network *Netmap) {
 
 	lBound := 0
 
@@ -228,9 +223,9 @@ func DetermineSuccessors(network Netmap) {
 	}
 }
 
-func CreateFingerTables(network Netmap, fingerTableSize int) {
+func CreateFingerTables(network *Netmap, fingerTableSize int) {
 
-	for k, node := range network.Nodes {
+	for k, _ := range network.Nodes {
 		table := FingerTable{
 			Entries: make([]FtEntry, fingerTableSize),
 			Size:    fingerTableSize,
@@ -248,17 +243,27 @@ func CreateFingerTables(network Netmap, fingerTableSize int) {
 		}
 
 		// Set the node's completed finger table.
-		node.Table = table
-		network.Nodes[k] = node
+		network.Nodes[k].Table = table
 	}
 }
 
-//func FindSuccessor(network Netmap, node int) {
-//
-//	for index, node := range Netmap.Nodes {
-//
-//	}
-//}
+func FindSuccessor(network *Netmap, node int, key int) int {
+
+	if key == node {
+		return key
+	}
+
+	min := network.Size
+	for _, entries := range network.Nodes[node].Table.Entries {
+		if entries.Key < min {
+			min = entries.Key
+		} else {
+			FindSuccessor(network, min, key)
+		}
+	}
+
+	return -1
+}
 
 func PrintNetwork(network Netmap) {
 
@@ -343,12 +348,14 @@ func main() {
 
 	chord := InitializeChord(s)
 	//PrintNetwork(chord)
-	//CreateActiveNodes(chord, r)
-	GenerateActiveNodes(&chord, r)
-	PrintActiveNodes(chord)
-	DetermineSuccessors(chord)
+	CreateActiveNodes(&chord, r)
+	//GenerateActiveNodes(&chord, r)
+	//PrintActiveNodes(chord)
+	DetermineSuccessors(&chord)
 	//PrintNetwork(chord)
-	CreateFingerTables(chord, fts)
+	CreateFingerTables(&chord, fts)
 	PrintNetwork(chord)
+
+	fmt.Println(FindSuccessor(&chord, chord.AnchorId, 3))
 
 }
