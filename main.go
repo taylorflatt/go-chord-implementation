@@ -206,7 +206,7 @@ func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 func CreateActiveNodes(network *Netmap, r *bufio.Reader) {
 
 	fmt.Println()
-	fmt.Println("Enter an active node (type done to stop)")
+	fmt.Println("Enter an active node (type \"done\" to stop)")
 	fmt.Println("-----------------------------------")
 
 	min := network.Size
