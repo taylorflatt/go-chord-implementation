@@ -310,32 +310,6 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	min := network.Size
 	for index, entry := range network.Nodes[node].Table.Entries {
 
-		switch {
-		case index == 0:
-			nextActive = entry.Successor
-		case nextActive > find && node < find:
-			fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
-			return entry.Successor
-		case entry.Key < find:
-			min = entry.Successor
-		default:
-			break
-		}
-
-		// Store the next active node.
-		if index == 0 {
-			nextActive = entry.Successor
-		}
-
-		// We know that the node must lie between us and the next active node.
-		//if nextActive > find && node < find {
-		//	fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
-		//	return entry.Successor
-		//}
-		//
-		//if entry.Key < find {
-		//	min = entry.Successor
-		//}
 	}
 
 	fmt.Println("  > Node ", min, " is the closest preceeding node. Moving to node ", min)
