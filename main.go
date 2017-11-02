@@ -12,8 +12,9 @@ import (
 )
 
 type Netmap struct {
-	Nodes []Node
-	Size  int
+	AnchorId int
+	Nodes    []Node
+	Size     int
 }
 
 type FtEntry struct {
@@ -96,7 +97,7 @@ func InitializeChord(size int) Netmap {
 	return chord
 }
 
-func GenerateActiveNodes(network Netmap, r *bufio.Reader) {
+func GenerateActiveNodes(network *Netmap, r *bufio.Reader) {
 
 	fmt.Println()
 	fmt.Println("Enter the parameters for the PNG")
@@ -121,28 +122,30 @@ func GenerateActiveNodes(network Netmap, r *bufio.Reader) {
 	st = strings.TrimSpace(mt)
 	multiplier, err := ParseInt32(mt)
 
+	min := network.Size
+
 	// Set the first node as active.
 	i := ((multiplier * seed) + increment) % network.Size
 	network.Nodes[i].Active = true
 
 	for true {
 
+		if i < min {
+			min = i
+		}
+
 		// Pseudo-random number generator.
 		i = ((multiplier * i) + increment) % network.Size
 
-		fmt.Println("RandNum: ", i)
-
-		PrintNode(network.Nodes[i])
-
 		// We have begun repeating, thus we have generated all active nodes.
 		if network.Nodes[i].Active == true {
-			fmt.Println("FOUND LOOP POINT, BREAKING")
+			// Set the first active node (where queries first enter).
+			network.AnchorId = min
 			break
 		}
 
 		network.Nodes[i].Active = true
 	}
-
 }
 
 func CreateActiveNodes(network Netmap, r *bufio.Reader) {
@@ -151,6 +154,7 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 	fmt.Println("Enter an active node (type done to stop)")
 	fmt.Println("-----------------------------------")
 
+	min := network.Size
 	// Set the active nodes for the network.
 	for true {
 		fmt.Print("Active Node: ")
@@ -169,6 +173,9 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 		case i > network.Size-1:
 			fmt.Println("Please enter a node that is within the size of the network.")
 		default:
+			if i < min {
+				min = i
+			}
 			// Create the node and set it to active.
 			n := Node{
 				Active: true,
@@ -178,13 +185,16 @@ func CreateActiveNodes(network Netmap, r *bufio.Reader) {
 			network.Nodes[i] = n
 		}
 	}
+
+	// Set the first active node (where queries first enter).
+	network.AnchorId = min
 }
 
 func DetermineSuccessors(network Netmap) {
 
 	lBound := 0
-	first := false
-	firstActive := 0
+	//first := false
+	//firstActive := 0
 
 	for index, node := range network.Nodes {
 
@@ -197,10 +207,10 @@ func DetermineSuccessors(network Netmap) {
 			}
 
 			// Store the first active node for later use.
-			if first {
-				firstActive = node.Id
-				first = false
-			}
+			//if first {
+			//	firstActive = node.Id
+			//	first = false
+			//}
 		}
 
 		// When it reaches the end of the circular structure, there could be nodes
@@ -208,7 +218,7 @@ func DetermineSuccessors(network Netmap) {
 		// the first active node found since they are immediately before it logically.
 		if index == network.Size-1 {
 			for lBound <= index {
-				network.Nodes[lBound].Successor = firstActive
+				network.Nodes[lBound].Successor = network.AnchorId
 				lBound++
 			}
 		}
@@ -240,16 +250,17 @@ func CreateFingerTables(network Netmap, fingerTableSize int) {
 	}
 }
 
-func FindNodeDataLocation(network Netmap, node int) {
-
-	for index, node := range Netmap.Nodes {
-
-	}
-}
+//func FindSuccessor(network Netmap, node int) {
+//
+//	for index, node := range Netmap.Nodes {
+//
+//	}
+//}
 
 func PrintNetwork(network Netmap) {
 
 	fmt.Println("Network Size: ", network.Size)
+	fmt.Println("Network Anchor: ", network.AnchorId)
 
 	for _, node := range network.Nodes {
 		fmt.Println("Node: ", node.Id)
@@ -330,11 +341,11 @@ func main() {
 	chord := InitializeChord(s)
 	//PrintNetwork(chord)
 	//CreateActiveNodes(chord, r)
-	GenerateActiveNodes(chord, r)
+	GenerateActiveNodes(&chord, r)
 	PrintActiveNodes(chord)
 	DetermineSuccessors(chord)
 	//PrintNetwork(chord)
 	CreateFingerTables(chord, fts)
-	//PrintNetwork(chord)
+	PrintNetwork(chord)
 
 }
