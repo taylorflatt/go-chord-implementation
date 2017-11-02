@@ -249,27 +249,29 @@ func CreateFingerTables(network *Netmap, fingerTableSize int) {
 
 func FindSuccessor(network *Netmap, node int, find int) int {
 
-	fmt.Println("Entering node = ", node)
-
-	//	if find == node {
-	//		return node
-	//	}
+	fmt.Println("Entering node ", node)
+	PrintNodeFingerTable(network.Nodes[node])
 
 	min := network.Size
 	for _, entries := range network.Nodes[node].Table.Entries {
-		fmt.Println("----------------------")
-		fmt.Println("Node: ", node, "Entries.Key: ", entries.Key, ", Min = ", min)
 		switch {
+		// We know this by definition of the algorithm.
+		case find < node:
+			fmt.Println("  > By definition, we know node ", node, " must who we are looking for.")
+			return node
 		case entries.Key < find:
+			fmt.Println("  > key ", entries.Key, " is less than our value ", find)
 			min = entries.Successor
 		case entries.Key == find:
-			fmt.Println("Successor: ", entries.Successor)
+			fmt.Println("  > Found ", find, " with node ", entries.Successor, " as it's successor!")
 			return entries.Successor
 		case entries.Key > find:
+			fmt.Println("  > Node ", min, " is the closest preceeding node. Moving to node ", min)
 			break
 		}
 	}
 
+	fmt.Println()
 	return FindSuccessor(network, min, find)
 }
 
@@ -298,12 +300,12 @@ func PrintNetwork(network Netmap) {
 func PrintNode(node Node) {
 
 	fmt.Println("Node: ", node.Id)
-	fmt.Println("--------------")
+	fmt.Println("-------------------")
 	fmt.Println("Active: ", node.Active)
 	fmt.Println("Successor: ", node.Successor)
-	fmt.Println("--------------")
+	fmt.Println("-------------------")
 	fmt.Println("FINGER TABLE")
-	fmt.Println("--------------")
+	fmt.Println("-------------------")
 
 	for _, entry := range node.Table.Entries {
 		fmt.Print("Key = ", entry.Key)
@@ -315,7 +317,7 @@ func PrintNode(node Node) {
 func PrintActiveNodes(network Netmap) {
 
 	fmt.Println("Active Nodes:")
-	fmt.Println("--------------")
+	fmt.Println("-------------------")
 	for _, node := range network.Nodes {
 		if node.Active == true {
 			fmt.Println("Node: ", node.Id)
@@ -325,15 +327,14 @@ func PrintActiveNodes(network Netmap) {
 
 func PrintNodeFingerTable(node Node) {
 
-	fmt.Println("Node: ", node.Id)
-	fmt.Println("FINGER TABLE")
-	fmt.Println("--------------")
+	fmt.Println("-------------------")
 
 	for _, entry := range node.Table.Entries {
 		fmt.Print("Key = ", entry.Key)
 		fmt.Print(" , Value = ", entry.Successor)
 		fmt.Println()
 	}
+	fmt.Println("-------------------")
 }
 
 func main() {
@@ -364,6 +365,6 @@ func main() {
 	CreateFingerTables(&chord, fts)
 	//PrintNetwork(chord)
 
-	fmt.Println(FindSuccessor(&chord, chord.AnchorId, 0))
+	fmt.Println(FindSuccessor(&chord, chord.AnchorId, 16))
 
 }
