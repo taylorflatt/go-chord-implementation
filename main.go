@@ -247,22 +247,30 @@ func CreateFingerTables(network *Netmap, fingerTableSize int) {
 	}
 }
 
-func FindSuccessor(network *Netmap, node int, key int) int {
+func FindSuccessor(network *Netmap, node int, find int) int {
 
-	if key == node {
-		return key
-	}
+	fmt.Println("Entering node = ", node)
+
+	//	if find == node {
+	//		return node
+	//	}
 
 	min := network.Size
 	for _, entries := range network.Nodes[node].Table.Entries {
-		if entries.Key < min {
-			min = entries.Key
-		} else {
-			FindSuccessor(network, min, key)
+		fmt.Println("----------------------")
+		fmt.Println("Node: ", node, "Entries.Key: ", entries.Key, ", Min = ", min)
+		switch {
+		case entries.Key < find:
+			min = entries.Successor
+		case entries.Key == find:
+			fmt.Println("Successor: ", entries.Successor)
+			return entries.Successor
+		case entries.Key > find:
+			break
 		}
 	}
 
-	return -1
+	return FindSuccessor(network, min, find)
 }
 
 func PrintNetwork(network Netmap) {
@@ -354,8 +362,8 @@ func main() {
 	DetermineSuccessors(&chord)
 	//PrintNetwork(chord)
 	CreateFingerTables(&chord, fts)
-	PrintNetwork(chord)
+	//PrintNetwork(chord)
 
-	fmt.Println(FindSuccessor(&chord, chord.AnchorId, 3))
+	fmt.Println(FindSuccessor(&chord, chord.AnchorId, 0))
 
 }
