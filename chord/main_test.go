@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -8,6 +9,7 @@ import (
 var networkA Netmap
 var networkB Netmap
 var networkC Netmap
+var networkD Netmap
 
 func TestMain(m *testing.M) {
 
@@ -18,6 +20,7 @@ func TestMain(m *testing.M) {
 	networkA = InitializeTestNetworks(networkSize, fingerTableSize)
 	networkB = InitializeTestNetworks(networkSize, fingerTableSize)
 	networkC = InitializeTestNetworks(networkSize, fingerTableSize)
+	networkD = InitializeTestNetworks(networkSize, fingerTableSize)
 
 	os.Exit(m.Run())
 }
@@ -75,6 +78,10 @@ func TestFindSuccessor(t *testing.T) {
 		1, 2,
 	}
 
+	netDNodeActive := []int{
+		1, 31,
+	}
+
 	// Set network A active nodes.
 	for _, node := range netANodeActive {
 		if networkA.Nodes[node].ID == node {
@@ -96,6 +103,13 @@ func TestFindSuccessor(t *testing.T) {
 		}
 	}
 
+	// Set network D active nodes.
+	for _, node := range netDNodeActive {
+		if networkD.Nodes[node].ID == node {
+			networkD.Nodes[node].Active = true
+		}
+	}
+
 	// Create finger tables
 	// Note: Should probably have nested testing where each parent function is tested first.
 	aFingerTableSize, _ := ComputeFTableSize(networkA.Size)
@@ -110,30 +124,40 @@ func TestFindSuccessor(t *testing.T) {
 	DetermineSuccessors(&networkC)
 	CreateFingerTables(&networkC, cFingerTableSize)
 
+	dFingerTableSize, _ := ComputeFTableSize(networkD.Size)
+	DetermineSuccessors(&networkD)
+	CreateFingerTables(&networkD, dFingerTableSize)
+
 	// Create tests
 	tests := []struct {
 		net       *Netmap
+		netID     string
 		startNode int
 		node      int
 		expected  int
 	}{
-		{&networkA, 1, 14, 1},
-		{&networkA, 1, 17, 1},
-		{&networkA, 1, 18, 1},
-		{&networkB, 1, 3, 4},
-		{&networkB, 1, 14, 15},
-		{&networkB, 1, 16, 20},
-		{&networkC, 1, 20, 1},
-		{&networkC, 1, 0, 1},
-		{&networkC, 2, 0, 1},
+		{&networkA, "A", 3, 3, 3},
+		{&networkA, "A", 1, 14, 1},
+		{&networkA, "A", 1, 17, 1},
+		{&networkA, "A", 1, 18, 1},
+		{&networkB, "B", 1, 3, 4},
+		{&networkB, "B", 1, 14, 15},
+		{&networkB, "B", 1, 16, 20},
+		{&networkC, "C", 1, 20, 1},
+		{&networkC, "C", 1, 0, 1},
+		{&networkC, "C", 2, 0, 1},
+		{&networkD, "D", 1, 0, 1},
+		{&networkD, "D", 1, 20, 31},
+		{&networkD, "D", 1, 1, 1},
 	}
 
 	// Run the tests.
 	for _, test := range tests {
+		fmt.Printf("\nPERFORMING LOOKUP FOR net: %s, node: %d, startingAt: %d\n", test.netID, test.node, test.startNode)
 		out := FindSuccessor(test.net, test.startNode, test.node)
 
 		if out != test.expected {
-			t.Errorf("Failed to successfully lookup the successor for %d from node %d. Got: %d, expected: %d", test.node, test.startNode, out, test.expected)
+			t.Errorf("Network: %s failed lookup for %d starting at %d. Received: %d, Expected: %d", test.netID, test.node, test.startNode, out, test.expected)
 		}
 	}
 }

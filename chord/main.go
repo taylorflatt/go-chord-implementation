@@ -332,7 +332,7 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 
 	// It has wrapped around (
 	if min == network.Size {
-		fmt.Println("  > We know that node ", node, " is the successor to ", find, ". Therefore, the data is in node ", node)
+		fmt.Println("  > (last)We know that node ", node, " is the successor to ", find, ". Therefore, the data is in node ", lastEntry)
 		return lastEntry
 	}
 
