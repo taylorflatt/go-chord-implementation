@@ -7,6 +7,7 @@ import (
 
 var networkA Netmap
 var networkB Netmap
+var networkC Netmap
 
 func TestMain(m *testing.M) {
 
@@ -16,6 +17,7 @@ func TestMain(m *testing.M) {
 	// Initialize a basic network.
 	networkA = InitializeTestNetworks(networkSize, fingerTableSize)
 	networkB = InitializeTestNetworks(networkSize, fingerTableSize)
+	networkC = InitializeTestNetworks(networkSize, fingerTableSize)
 
 	os.Exit(m.Run())
 }
@@ -69,6 +71,10 @@ func TestFindSuccessor(t *testing.T) {
 		1, 4, 7, 12, 15, 20, 27,
 	}
 
+	netCNodeActive := []int{
+		1, 2,
+	}
+
 	// Set network A active nodes.
 	for _, node := range netANodeActive {
 		if networkA.Nodes[node].ID == node {
@@ -83,6 +89,13 @@ func TestFindSuccessor(t *testing.T) {
 		}
 	}
 
+	// Set network C active nodes.
+	for _, node := range netCNodeActive {
+		if networkC.Nodes[node].ID == node {
+			networkC.Nodes[node].Active = true
+		}
+	}
+
 	// Create finger tables
 	// Note: Should probably have nested testing where each parent function is tested first.
 	aFingerTableSize, _ := ComputeFTableSize(networkA.Size)
@@ -92,6 +105,10 @@ func TestFindSuccessor(t *testing.T) {
 	bFingerTableSize, _ := ComputeFTableSize(networkB.Size)
 	DetermineSuccessors(&networkB)
 	CreateFingerTables(&networkB, bFingerTableSize)
+
+	cFingerTableSize, _ := ComputeFTableSize(networkC.Size)
+	DetermineSuccessors(&networkC)
+	CreateFingerTables(&networkC, cFingerTableSize)
 
 	// Create tests
 	tests := []struct {
@@ -106,6 +123,9 @@ func TestFindSuccessor(t *testing.T) {
 		{&networkB, 1, 3, 4},
 		{&networkB, 1, 14, 15},
 		{&networkB, 1, 16, 20},
+		{&networkC, 1, 20, 1},
+		{&networkC, 1, 0, 1},
+		{&networkC, 2, 0, 1},
 	}
 
 	// Run the tests.

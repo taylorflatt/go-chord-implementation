@@ -307,6 +307,7 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	PrintNodeFingerTable(network.Nodes[node])
 
 	nextActive := 0
+	lastEntry := 0
 	min := network.Size
 	for index, entry := range network.Nodes[node].Table.Entries {
 
@@ -319,6 +320,7 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 		case entry.Key < find:
 			min = entry.Successor
 		default:
+			lastEntry = entry.Successor
 			break
 		}
 	}
@@ -326,6 +328,12 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	if min == node {
 		fmt.Println("  > We know that node ", node, " is the successor to ", find, ". Therefore, the data is in node ", node)
 		return node
+	}
+
+	// It has wrapped around (
+	if min == network.Size {
+		fmt.Println("  > We know that node ", node, " is the successor to ", find, ". Therefore, the data is in node ", node)
+		return lastEntry
 	}
 
 	fmt.Println("  > Node ", min, " is the closest preceeding node. Moving to node ", min)
