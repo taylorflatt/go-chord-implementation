@@ -110,8 +110,7 @@ func main() {
 	at = strings.TrimSpace(at)
 	anchor, err := ParseInt32(at)
 
-	FindSuccessor(&chord, anchor, 14)
-
+	FindSuccessor(&chord, anchor, 18)
 }
 
 // ComputeFTableSize determines the sizes of finger tables based on the size of the network.
@@ -276,6 +275,7 @@ func DetermineSuccessors(network *Netmap) {
 // It doesn't return anything.
 func CreateFingerTables(network *Netmap, fingerTableSize int) {
 
+	// TODO: Only need finger tables for ACTIVE nodes.
 	for k, _ := range network.Nodes {
 		table := FingerTable{
 			Entries: make([]FtEntry, fingerTableSize),
@@ -310,6 +310,22 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	min := network.Size
 	for index, entry := range network.Nodes[node].Table.Entries {
 
+		switch {
+		case index == 0:
+			nextActive = entry.Successor
+		case nextActive > find && node < find:
+			fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
+			return entry.Successor
+		case entry.Key < find:
+			min = entry.Successor
+		default:
+			break
+		}
+	}
+
+	if min == node {
+		fmt.Println("  > We know that node ", node, " is the successor to ", find, ". Therefore, the data is in node ", node)
+		return node
 	}
 
 	fmt.Println("  > Node ", min, " is the closest preceeding node. Moving to node ", min)
