@@ -306,21 +306,39 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 	fmt.Println("Entering node ", node)
 	PrintNodeFingerTable(network.Nodes[node])
 
+	if find == node {
+		fmt.Println("  > We are the node(", node, ") that is being searched for (trivial).")
+		return node
+	}
+
 	nextActive := 0
-	lastEntry := 0
 	min := network.Size
 	for index, entry := range network.Nodes[node].Table.Entries {
 
-		switch {
-		case index == 0:
+		if index == 0 {
 			nextActive = entry.Successor
-		case nextActive > find && node < find:
+		}
+
+		/// Run the CHORD algorithm:
+		/// 	1) Is the node we are looking for btwn the current node and the next active node?
+		///			- Case 1: The next node is larger than the current node (traditional).
+		///			- Case 2: The next node is less than the current node (wrapped).
+		///		2) If not, check the finger table to determine the next closest predecessor.
+		///			- Case 1: There exists a closest predecessor s.t. key < find: loop until closest is found and then goto that successor.
+		///			- Case 2: These doesn't exist a closest predecessor, key > find: goto successor(key)
+		///
+		if nextActive > find && node < find {
+			// Is the node we are looking for between the current node and the next active node?
 			fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
 			return entry.Successor
-		case entry.Key < find:
+		} else if node > nextActive && (node > find && nextActive < find+network.Size) {
+			// We have wrapped around so the next active node is less than the current node.
+			fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
+			return entry.Successor
+		} else if entry.Key < find {
 			min = entry.Successor
-		default:
-			lastEntry = entry.Successor
+		} else {
+			fmt.Printf("I see, NODE = %d, NEXT = %d, FIND = %d\n", node, nextActive, find)
 			break
 		}
 	}
@@ -330,10 +348,8 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 		return node
 	}
 
-	// It has wrapped around (
 	if min == network.Size {
-		fmt.Println("  > (last)We know that node ", node, " is the successor to ", find, ". Therefore, the data is in node ", lastEntry)
-		return lastEntry
+		min = nextActive
 	}
 
 	fmt.Println("  > Node ", min, " is the closest preceeding node. Moving to node ", min)

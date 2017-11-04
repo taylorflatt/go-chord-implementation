@@ -143,6 +143,11 @@ func TestFindSuccessor(t *testing.T) {
 		{&networkB, "B", 1, 3, 4},
 		{&networkB, "B", 1, 14, 15},
 		{&networkB, "B", 1, 16, 20},
+
+		{&networkB, "B", 7, 21, 27},
+		{&networkB, "B", 27, 0, 1},
+		{&networkB, "B", 1, 0, 1},
+
 		{&networkC, "C", 1, 20, 1},
 		{&networkC, "C", 1, 0, 1},
 		{&networkC, "C", 2, 0, 1},
