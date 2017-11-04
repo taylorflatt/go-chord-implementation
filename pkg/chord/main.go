@@ -1,4 +1,4 @@
-// Package chord Allows a user to generate a network with pseudo-random active nodes or specify active nodes.
+// Package chord allows a user to generate a network with pseudo-random active nodes or specify active nodes.
 // Additionally, it will determine the location of data for a particular node starting at any specified active node.
 package chord
 
