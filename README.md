@@ -3,9 +3,10 @@
 A basic implementation of the lookup for a P2P CHORD network.
 
 ## Usage
-Start the program by running `go run main.go`. There are currently 2 flags available: 
+Start the program by running `go build main.go chord.go`. There are currently 2 flags available: 
 - `-v, --verbose`: Displays all runtime state information at each step.
 - `-m, --manual`: Allows manual input of active nodes. 
+A build is required due to the package being non-main. Hence, `go run main.go chord.go` will fail. To circumvent this, change the package name to main.
 
 ## Known Bugs
 None currently. If you run into any problems, please don't hesistate to create an issue
