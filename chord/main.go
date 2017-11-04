@@ -276,7 +276,7 @@ func DetermineSuccessors(network *Netmap) {
 func CreateFingerTables(network *Netmap, fingerTableSize int) {
 
 	// TODO: Only need finger tables for ACTIVE nodes.
-	for k, _ := range network.Nodes {
+	for k := range network.Nodes {
 		table := FingerTable{
 			Entries: make([]FtEntry, fingerTableSize),
 			Size:    fingerTableSize,

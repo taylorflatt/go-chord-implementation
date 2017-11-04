@@ -25,6 +25,39 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestComputeFTableSize(t *testing.T) {
+
+	fmt.Println("-----------------------------------")
+	fmt.Printf("[ComputeFTableSize TEST]\n")
+	fmt.Println("-----------------------------------")
+
+	// Create tests
+	tests := []struct {
+		in       int
+		expected int
+	}{
+		{4, 2},
+		{8, 3},
+		{16, 4},
+		{32, 5},
+		{64, 6},
+	}
+
+	// Run the tests.
+	for index, test := range tests {
+		fmt.Printf("\n[Test %d] Input: %d, Expecting: %d\n", index, test.in, test.expected)
+		out, err := ComputeFTableSize(test.in)
+
+		if err != nil {
+			t.Errorf("[Test %d] Expected: %d, Received: %d AND Error: %s", index, test.expected, out, err)
+		}
+
+		if out != test.expected {
+			t.Errorf("[Test %d] Expected: %d, Received: %d", index, test.expected, out)
+		}
+	}
+}
+
 func InitializeTestNetworks(networkSize int, fingerTableSize int) Netmap {
 
 	// Initialize a basic network.
@@ -40,7 +73,7 @@ func InitializeTestNetworks(networkSize int, fingerTableSize int) Netmap {
 	}
 
 	// Create the finger tables for each node.
-	for k, _ := range network.Nodes {
+	for k := range network.Nodes {
 		table := FingerTable{
 			Entries: make([]FtEntry, fingerTableSize),
 			Size:    fingerTableSize,
@@ -65,6 +98,10 @@ func InitializeTestNetworks(networkSize int, fingerTableSize int) Netmap {
 }
 
 func TestFindSuccessor(t *testing.T) {
+
+	fmt.Println("-----------------------------------")
+	fmt.Printf("[FindSuccessor TEST]\n")
+	fmt.Println("-----------------------------------")
 
 	netANodeActive := []int{
 		1, 2, 3, 4, 5,
@@ -157,12 +194,12 @@ func TestFindSuccessor(t *testing.T) {
 	}
 
 	// Run the tests.
-	for _, test := range tests {
-		fmt.Printf("\nPERFORMING LOOKUP FOR net: %s, node: %d, startingAt: %d\n", test.netID, test.node, test.startNode)
+	for index, test := range tests {
+		fmt.Printf("\n[Test %d] Network: %s, Node: %d, StartingAt: %d\n", index, test.netID, test.node, test.startNode)
 		out := FindSuccessor(test.net, test.startNode, test.node)
 
 		if out != test.expected {
-			t.Errorf("Network: %s failed lookup for %d starting at %d. Received: %d, Expected: %d", test.netID, test.node, test.startNode, out, test.expected)
+			t.Errorf("[Test %d] Network: %s failed lookup for %d starting at %d. Received: %d, Expected: %d", index, test.netID, test.node, test.startNode, out, test.expected)
 		}
 	}
 }
