@@ -25,74 +25,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestComputeFTableSize(t *testing.T) {
-
-	fmt.Println("-----------------------------------")
-	fmt.Printf("[ComputeFTableSize TEST]\n")
-	fmt.Println("-----------------------------------")
-
-	// Create tests
-	tests := []struct {
-		in       int
-		expected int
-	}{
-		{4, 2},
-		{8, 3},
-		{16, 4},
-		{32, 5},
-		{64, 6},
-	}
-
-	// Run the tests.
-	for index, test := range tests {
-		fmt.Printf("\n[Test %d] Input: %d, Expected: %d\n", index, test.in, test.expected)
-		out, err := ComputeFTableSize(test.in)
-
-		if err != nil {
-			t.Errorf("[Test %d] Expected: %d, Received: %d AND Error: %s", index, test.expected, out, err)
-		}
-
-		if out != test.expected {
-			t.Errorf("[Test %d] Expected: %d, Received: %d", index, test.expected, out)
-		}
-	}
-}
-
-func TestInitializeChord(t *testing.T) {
-
-	fmt.Println("-----------------------------------")
-	fmt.Printf("[InitializeChord TEST]\n")
-	fmt.Println("-----------------------------------")
-
-	// Create tests
-	tests := []struct {
-		in int
-	}{
-		{4},
-		{8},
-		{16},
-		{32},
-		{64},
-	}
-
-	// Run the tests.
-	for index, test := range tests {
-		fmt.Printf("\n[Test %d] Input: %d\n", index, test.in)
-		out := InitializeChord(test.in)
-
-		if out.Size == 0 {
-			t.Errorf("[Test %d] Expected: %d, Received: %d", index, test.in, out.Size)
-		}
-
-		for j, node := range out.Nodes {
-			if node.ID != j {
-				t.Errorf("[Test %d] Expected: %d, Received: %d", index, j, node.ID)
-			}
-		}
-	}
-
-}
-
 func InitializeTestNetworks(networkSize int, fingerTableSize int) Netmap {
 
 	// Initialize a basic network.
@@ -130,6 +62,78 @@ func InitializeTestNetworks(networkSize int, fingerTableSize int) Netmap {
 	}
 
 	return network
+}
+
+func TestComputeFTableSize(t *testing.T) {
+
+	fmt.Println("-----------------------------------")
+	fmt.Printf("[ComputeFTableSize TEST]\n")
+	fmt.Println("-----------------------------------")
+
+	// Create tests
+	tests := []struct {
+		in       int
+		expected int
+	}{
+		{4, 2},
+		{8, 3},
+		{16, 4},
+		{32, 5},
+		{64, 6},
+	}
+
+	// Run the tests.
+	for index, test := range tests {
+		fmt.Printf("\n[Test %d] Input: %d, Expected: %d\n", index, test.in, test.expected)
+		out, err := ComputeFTableSize(test.in)
+
+		if err != nil {
+			t.Errorf("[Test %d] Expected: %d, Received: %d AND Error: %s", index, test.expected, out, err)
+		}
+
+		if out != test.expected {
+			t.Errorf("[Test %d] Expected: %d, Received: %d", index, test.expected, out)
+		}
+
+		fmt.Printf("[Test %d] Passed!\n", index)
+	}
+}
+
+func TestInitializeChord(t *testing.T) {
+
+	fmt.Println("-----------------------------------")
+	fmt.Printf("[InitializeChord TEST]\n")
+	fmt.Println("-----------------------------------")
+
+	// Create tests
+	tests := []struct {
+		in       int
+		expected int
+	}{
+		{4, 4},
+		{8, 8},
+		{16, 16},
+		{32, 32},
+		{64, 64},
+	}
+
+	// Run the tests.
+	for index, test := range tests {
+		fmt.Printf("\n[Test %d] Input: %d, Expected: %d\n", index, test.in, test.expected)
+		out := InitializeChord(test.in)
+
+		if out.Size == 0 {
+			t.Errorf("[Test %d] Expected: %d, Received: %d", index, test.in, out.Size)
+		}
+
+		for j, node := range out.Nodes {
+			if node.ID != j {
+				t.Errorf("[Test %d] Expected: %d, Received: %d", index, j, node.ID)
+			}
+		}
+		fmt.Printf("[Test %d] Passed!\n", index)
+
+	}
 }
 
 func TestFindSuccessor(t *testing.T) {
@@ -241,5 +245,7 @@ func TestFindSuccessor(t *testing.T) {
 		if out != test.expected {
 			t.Errorf("[Test %d] Network: %s failed lookup for %d starting at %d. Received: %d, Expected: %d", index, test.netID, test.node, test.startNode, out, test.expected)
 		}
+
+		fmt.Printf("[Test %d] Passed!\n", index)
 	}
 }
