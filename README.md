@@ -1,4 +1,4 @@
-# CHORD Implementation [![Build Status](https://travis-ci.org/taylorflatt/go-chord-implementation.svg?branch=master)](https://travis-ci.org/taylorflatt/go-chord-implementation)
+# CHORD Implementation [![GoDoc](https://godoc.org/github.com/taylorflatt/go-chord-implementation?status.svg)](https://godoc.org/github.com/taylorflatt/go-chord-implementation) [![Build Status](https://travis-ci.org/taylorflatt/go-chord-implementation.svg?branch=master)](https://travis-ci.org/taylorflatt/go-chord-implementation)
 
 A basic implementation of the lookup for a P2P CHORD network.
 
