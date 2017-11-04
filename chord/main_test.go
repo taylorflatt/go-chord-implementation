@@ -45,7 +45,7 @@ func TestComputeFTableSize(t *testing.T) {
 
 	// Run the tests.
 	for index, test := range tests {
-		fmt.Printf("\n[Test %d] Input: %d, Expecting: %d\n", index, test.in, test.expected)
+		fmt.Printf("\n[Test %d] Input: %d, Expected: %d\n", index, test.in, test.expected)
 		out, err := ComputeFTableSize(test.in)
 
 		if err != nil {
@@ -56,6 +56,41 @@ func TestComputeFTableSize(t *testing.T) {
 			t.Errorf("[Test %d] Expected: %d, Received: %d", index, test.expected, out)
 		}
 	}
+}
+
+func TestInitializeChord(t *testing.T) {
+
+	fmt.Println("-----------------------------------")
+	fmt.Printf("[InitializeChord TEST]\n")
+	fmt.Println("-----------------------------------")
+
+	// Create tests
+	tests := []struct {
+		in int
+	}{
+		{4},
+		{8},
+		{16},
+		{32},
+		{64},
+	}
+
+	// Run the tests.
+	for index, test := range tests {
+		fmt.Printf("\n[Test %d] Input: %d\n", index, test.in)
+		out := InitializeChord(test.in)
+
+		if out.Size == 0 {
+			t.Errorf("[Test %d] Expected: %d, Received: %d", index, test.in, out.Size)
+		}
+
+		for j, node := range out.Nodes {
+			if node.ID != j {
+				t.Errorf("[Test %d] Expected: %d, Received: %d", index, j, node.ID)
+			}
+		}
+	}
+
 }
 
 func InitializeTestNetworks(networkSize int, fingerTableSize int) Netmap {
@@ -195,8 +230,13 @@ func TestFindSuccessor(t *testing.T) {
 
 	// Run the tests.
 	for index, test := range tests {
-		fmt.Printf("\n[Test %d] Network: %s, Node: %d, StartingAt: %d\n", index, test.netID, test.node, test.startNode)
+		fmt.Printf("\n[Test %d] Network: %s, Node: %d, StartingAt: %d, Expected: %d\n", index, test.netID, test.node, test.startNode, test.expected)
+
+		// Suppress the function's print statements.
+		o := os.Stdout
+		os.Stdout, _ = os.Open(os.DevNull)
 		out := FindSuccessor(test.net, test.startNode, test.node)
+		os.Stdout = o
 
 		if out != test.expected {
 			t.Errorf("[Test %d] Network: %s failed lookup for %d starting at %d. Received: %d, Expected: %d", index, test.netID, test.node, test.startNode, out, test.expected)
