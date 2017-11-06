@@ -77,10 +77,15 @@ func main() {
 	}
 
 	fmt.Println()
-	fmt.Println("Enter a node from where to search from: ")
+	fmt.Print("Enter a data node: ")
+	nt, _ := r.ReadString('\n')
+	nt = strings.TrimSpace(nt)
+	n, err := ParseInt32(nt)
+
+	fmt.Print("Enter a node from where to search from: ")
 	at, _ := r.ReadString('\n')
 	at = strings.TrimSpace(at)
 	anchor, err := ParseInt32(at)
 
-	FindSuccessor(&chord, anchor, 18)
+	FindSuccessor(&chord, anchor, n)
 }

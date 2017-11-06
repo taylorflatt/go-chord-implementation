@@ -252,16 +252,18 @@ func FindSuccessor(network *Netmap, node int, find int) int {
 		///
 		if nextActive > find && node < find {
 			// Is the node we are looking for between the current node and the next active node?
+			//fmt.Printf("I see, NODE = %d, NEXT = %d, FIND = %d\n", node, nextActive, find)
 			fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
 			return entry.Successor
-		} else if node > nextActive && (node > find && nextActive < find+network.Size) {
+		} else if node > nextActive && (node < find+network.Size && find+network.Size < nextActive+network.Size) {
 			// We have wrapped around so the next active node is less than the current node.
+			//fmt.Printf("I see, NODE = %d, NEXT = %d, FIND = %d\n", node, nextActive, find)
 			fmt.Println("  > We know that node ", find, " falls between us (", node, ") and the next active node (", entry.Successor, "). Therefore, the data is in node ", entry.Successor)
 			return entry.Successor
 		} else if entry.Key < find {
 			min = entry.Successor
 		} else {
-			fmt.Printf("I see, NODE = %d, NEXT = %d, FIND = %d\n", node, nextActive, find)
+			//fmt.Printf("I see, NODE = %d, NEXT = %d, FIND = %d\n", node, nextActive, find)
 			break
 		}
 	}
