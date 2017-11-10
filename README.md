@@ -13,4 +13,4 @@ A build is required due to the package being non-main. Hence, `go run main.go ch
 None currently. If you run into any problems, please don't hesistate to create an issue
 
 ## Future Ideas
-Complete the implementation and gravitate towards a real implementation using SHA-1 for key generation. The implementation would also include nodes joining/leaving/churn/real network.
+Complete the implementation and gravitate towards a real implementation using SHA-1 for key generation. The implementation would also include nodes joining/leaving in a real network.
